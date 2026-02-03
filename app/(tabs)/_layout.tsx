@@ -33,21 +33,21 @@ export default function TabLayout() {
 			<Tabs.Screen
 				name="index"
 				options={{
-					tabBarIcon: ({ color }) => <HomeIcon fontSize={40} color={color} />,
+					tabBarIcon: ({ color }) => <HomeIcon width={36} height={36} color={color} />,
 				}}
 			/>
 
 			<Tabs.Screen
 				name="anchor"
 				options={{
-					tabBarIcon: ({ color }) => <AnchorIcon fontSize={40} color={color} />,
+					tabBarIcon: ({ color }) => <AnchorIcon width={36} height={36} color={color} />,
 				}}
 			/>
 
 			<Tabs.Screen
 				name="compass"
 				options={{
-					tabBarIcon: ({ color }) => <CompassIcon fontSize={40} color={color} />,
+					tabBarIcon: ({ color }) => <CompassIcon width={36} height={36} color={color} />,
 				}}
 			/>
 		</Tabs>

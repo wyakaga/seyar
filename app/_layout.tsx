@@ -1,3 +1,4 @@
+import "react-native-get-random-values";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, DeviceEventEmitter, View } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
@@ -16,7 +17,7 @@ import {
 import { useColorScheme } from "nativewind";
 import { ThemeProvider } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
 
 import "../global.css";
 
@@ -24,6 +25,7 @@ import { db } from "@/db/client";
 import { userSettings } from "@/db/schema";
 import migrations from "../src/drizzle/migrations";
 import { NAV_THEME } from "@/lib/theme";
+import { BottomSheetModalProvider } from "@/components/ui/bottom-sheet";
 
 const dbase = SQLite.openDatabaseSync("app.db");
 
@@ -114,23 +116,25 @@ export default function RootLayout() {
 	return (
 		<ThemeProvider value={NAV_THEME.dark}>
 			<GestureHandlerRootView style={{ flex: 1 }}>
-				<StatusBar style="light" />
+				<BottomSheetModalProvider>
+					<StatusBar style="light" />
 
-				<Stack
-					screenOptions={{
-						headerShown: false,
-						contentStyle: {
-							backgroundColor: "#121212",
-							paddingTop: insets.top,
-							paddingBottom: insets.bottom,
-						},
-					}}
-				>
-					<Stack.Screen name="(tabs)/index" />
-					<Stack.Screen name="onboarding/index" />
-				</Stack>
+					<Stack
+						screenOptions={{
+							headerShown: false,
+							contentStyle: {
+								backgroundColor: "#121212",
+								paddingTop: insets.top,
+								paddingBottom: insets.bottom,
+							},
+						}}
+					>
+						<Stack.Screen name="(tabs)/index" />
+						<Stack.Screen name="onboarding/index" />
+					</Stack>
 
-				<PortalHost />
+					<PortalHost />
+				</BottomSheetModalProvider>
 			</GestureHandlerRootView>
 		</ThemeProvider>
 	);
