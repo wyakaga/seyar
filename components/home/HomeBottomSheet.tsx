@@ -34,9 +34,10 @@ type ItemStatus = "anchored" | "rejected" | "purchased";
 interface Props {
 	ref: RefObject<BottomSheetModal | null>;
 	onItemAdded?: () => void;
+	onChange?: (index: number) => void;
 }
 
-const HomeBottomSheet = ({ ref, onItemAdded }: Props) => {
+const HomeBottomSheet = ({ ref, onItemAdded, onChange }: Props) => {
 	const snapPoints = useMemo(() => ["85%"], []);
 
 	const {
@@ -128,7 +129,12 @@ const HomeBottomSheet = ({ ref, onItemAdded }: Props) => {
 	}, []);
 
 	return (
-		<BottomSheet ref={ref} snapPoints={snapPoints} backdropComponent={renderBackdrop}>
+		<BottomSheet
+			ref={ref}
+			onChange={onChange}
+			snapPoints={snapPoints}
+			backdropComponent={renderBackdrop}
+		>
 			<View className="flex-1 gap-y-10">
 				<Text className="text-foreground text-xl font-bold text-center">Anchor a new item</Text>
 

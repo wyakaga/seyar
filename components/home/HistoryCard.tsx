@@ -8,7 +8,7 @@ import ShieldIcon from "../icons/ShieldIcon";
 import { Text } from "../ui/text";
 import { db } from "@/db/client";
 import { userSettings } from "@/db/schema";
-import CURRENCIES from "@/constants/currencies";
+import { formatCompactCurrency } from "@/lib/currency";
 
 interface Props {
 	status: "anchored" | "purchased" | "rejected";
@@ -20,25 +20,6 @@ interface Props {
 
 const HistoryCard = ({ status, name, price, unlockedAt, timeCost }: Props) => {
 	const [currency, setCurrency] = useState<string | null>(null);
-
-	const formattedPrice = useMemo(() => {
-		const currencyCode = CURRENCIES.find((c) => c.value === currency);
-		const currencySymbol = currencyCode ? currencyCode.symbol : currency;
-
-		if (price >= 1_000_000_000) {
-			return `${currencySymbol} ${(price / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}b`;
-		}
-
-		if (price >= 1_000_000) {
-			return `${currencySymbol} ${(price / 1_000_000).toFixed(1).replace(/\.0$/, "")}m`;
-		}
-
-		if (price >= 1_000) {
-			return `${currencySymbol} ${(price / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
-		}
-
-		return `${currencySymbol} ${price}`;
-	}, [currency, price]);
 
 	const formattedTimeLeft = useMemo(() => {
 		if (!unlockedAt) return "";
@@ -103,7 +84,9 @@ const HistoryCard = ({ status, name, price, unlockedAt, timeCost }: Props) => {
 				</View>
 			</View>
 
-			<Text className="font-jakarta font-medium text-lg">{formattedPrice}</Text>
+			<Text className="font-jakarta font-medium text-lg">
+				{formatCompactCurrency(price, currency)}
+			</Text>
 		</View>
 	);
 };

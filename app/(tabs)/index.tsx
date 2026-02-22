@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
-import { desc, InferSelectModel } from "drizzle-orm";
+import { and, desc, eq, InferSelectModel, lte } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import HistoryCard from "@/components/home/HistoryCard";
@@ -10,27 +11,58 @@ import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import HomeBottomSheet from "@/components/home/HomeBottomSheet";
 import { items as itemsTable, userSettings } from "@/db/schema";
+import CheckInBottomSheet from "@/components/home/CheckInBottomSheet";
 
 type Item = InferSelectModel<typeof itemsTable>;
 
 export default function Index() {
 	const sheetRef = useRef<BottomSheetModal>(null);
+	const checkInSheetRef = useRef<BottomSheetModal>(null);
 
 	const [items, setItems] = useState<Item[]>([]);
 	const [remainingLife, setRemainingLife] = useState("0.0");
+	const [itemToReview, setItemToReview] = useState<Item | null>(null);
+	const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+
+	const handleAddSheetChange = useCallback((index: number) => {
+		setIsAddSheetOpen(index >= 0);
+	}, []);
 
 	const handleOpen = useCallback(() => {
 		sheetRef.current?.present();
 	}, []);
 
-	const loadData = async () => {
+	const loadData = useCallback(async () => {
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
 		try {
-			const [fetchedItems, settingsResult] = await Promise.all([
+			const [fetchedItems, settingsResult, reviewableItems] = await Promise.all([
 				db.select().from(itemsTable).limit(5).orderBy(desc(itemsTable.createdAt)),
 				db.select().from(userSettings).limit(1),
+				db
+					.select()
+					.from(itemsTable)
+					.where(
+						and(
+							eq(itemsTable.status, "purchased"),
+							eq(itemsTable.reviewStatus, "pending"),
+							lte(itemsTable.purchasedAt, thirtyDaysAgo)
+						)
+					),
 			]);
 
 			setItems(fetchedItems);
+			console.log(reviewableItems);
+
+			if (!isAddSheetOpen && reviewableItems.length > 0) {
+				setItemToReview(reviewableItems[0]);
+
+				setTimeout(() => {
+					if (!isAddSheetOpen) {
+						checkInSheetRef.current?.present();
+					}
+				}, 500);
+			}
 
 			const settings = settingsResult[0];
 
@@ -55,11 +87,13 @@ export default function Index() {
 		} catch (e) {
 			console.log("Error fetching items", e);
 		}
-	};
+	}, [isAddSheetOpen]);
 
-	useEffect(() => {
-		loadData();
-	}, []);
+	useFocusEffect(
+		useCallback(() => {
+			loadData();
+		}, [loadData])
+	);
 
 	return (
 		<View style={{ flex: 1 }} className="flex flex-col gap-y-12 flex-1 pt-3 px-3">
@@ -92,7 +126,9 @@ export default function Index() {
 				</ScrollView>
 			</View>
 
-			<HomeBottomSheet ref={sheetRef} onItemAdded={loadData} />
+			<HomeBottomSheet ref={sheetRef} onItemAdded={loadData} onChange={handleAddSheetChange} />
+
+			<CheckInBottomSheet ref={checkInSheetRef} item={itemToReview} onReviewComplete={loadData} />
 		</View>
 	);
 }
