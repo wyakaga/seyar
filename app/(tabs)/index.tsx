@@ -52,7 +52,6 @@ export default function Index() {
 			]);
 
 			setItems(fetchedItems);
-			console.log(reviewableItems);
 
 			if (!isAddSheetOpen && reviewableItems.length > 0) {
 				setItemToReview(reviewableItems[0]);
@@ -109,22 +108,24 @@ export default function Index() {
 				<Text className="text-foreground">What are you eyeing?</Text>
 			</Button>
 
-			<View className="flex flex-col flex-1 gap-y-4 pt-2">
-				<Text className="text-foreground font-jakarta font-medium text-lg">Recent items</Text>
+			{items.length > 0 && (
+				<View className="flex flex-col flex-1 gap-y-4 pt-2">
+					<Text className="text-foreground font-jakarta font-medium text-lg">Recent items</Text>
 
-				<ScrollView className="flex-1" contentContainerClassName="gap-y-5 pb-5">
-					{items.map((item) => (
-						<HistoryCard
-							key={item.id}
-							name={item.name}
-							price={item.price}
-							status={item.status}
-							timeCost={item.timeCost}
-							unlockedAt={item.unlockedAt}
-						/>
-					))}
-				</ScrollView>
-			</View>
+					<ScrollView className="flex-1" contentContainerClassName="gap-y-5 pb-5">
+						{items.map((item) => (
+							<HistoryCard
+								key={item.id}
+								name={item.name}
+								price={item.price}
+								status={item.status}
+								timeCost={item.timeCost}
+								unlockedAt={item.unlockedAt}
+							/>
+						))}
+					</ScrollView>
+				</View>
+			)}
 
 			<HomeBottomSheet ref={sheetRef} onItemAdded={loadData} onChange={handleAddSheetChange} />
 

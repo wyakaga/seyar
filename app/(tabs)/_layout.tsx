@@ -45,7 +45,7 @@ export default function TabLayout() {
 			/>
 
 			<Tabs.Screen
-				name="compass"
+				name="bearing"
 				options={{
 					tabBarIcon: ({ color }) => <CompassIcon width={36} height={36} color={color} />,
 				}}
