@@ -3,7 +3,7 @@ name: Build and Release APK
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
@@ -19,27 +19,38 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: 📥 Install dependencies
         run: npm install
 
-      - name: ☕ Setup Java (Required for Android)
+      - name: ☕ Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
 
       - name: 🏗️ Generate Android folder (Expo Prebuild)
         run: npx expo prebuild --platform android
 
-      - name: 🔨 Build APK
+      - name: 🔨 Build Release APK
         working-directory: android
-        run: ./gradlew assembleDebug
 
-      - name: 🚀 Upload APK to GitHub Release
+        run: ./gradlew assembleRelease
+
+      - name: 🔐 Sign APK
+        id: sign_app
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEYSTORE_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
+
+      - name: 🚀 Upload Signed APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/debug/app-debug.apk
+          files: ${{steps.sign_app.outputs.signedReleaseFile}}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
