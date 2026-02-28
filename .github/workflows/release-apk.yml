@@ -47,6 +47,7 @@ jobs:
           alias: ${{ secrets.KEYSTORE_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          buildToolsVersion: 34.0.0
 
       - name: 🚀 Upload Signed APK to GitHub Release
         uses: softprops/action-gh-release@v2
