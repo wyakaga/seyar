@@ -1,98 +1,135 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useCallback, useRef, useState } from "react";
+import { ScrollView, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { and, desc, eq, InferSelectModel, lte } from "drizzle-orm";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { db } from "@/db/client";
+import HistoryCard from "@/components/home/HistoryCard";
+import CogIcon from "@/components/icons/CogIcon";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import HomeBottomSheet from "@/components/home/HomeBottomSheet";
+import { items as itemsTable, userSettings } from "@/db/schema";
+import CheckInBottomSheet from "@/components/home/CheckInBottomSheet";
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+type Item = InferSelectModel<typeof itemsTable>;
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+export default function Index() {
+	const sheetRef = useRef<BottomSheetModal>(null);
+	const checkInSheetRef = useRef<BottomSheetModal>(null);
+
+	const [items, setItems] = useState<Item[]>([]);
+	const [remainingLife, setRemainingLife] = useState("0.0");
+	const [itemToReview, setItemToReview] = useState<Item | null>(null);
+	const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+
+	const handleAddSheetChange = useCallback((index: number) => {
+		setIsAddSheetOpen(index >= 0);
+	}, []);
+
+	const handleOpen = useCallback(() => {
+		sheetRef.current?.present();
+	}, []);
+
+	const loadData = useCallback(async () => {
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+		try {
+			const [fetchedItems, settingsResult, reviewableItems] = await Promise.all([
+				db.select().from(itemsTable).limit(5).orderBy(desc(itemsTable.createdAt)),
+				db.select().from(userSettings).limit(1),
+				db
+					.select()
+					.from(itemsTable)
+					.where(
+						and(
+							eq(itemsTable.status, "purchased"),
+							eq(itemsTable.reviewStatus, "pending"),
+							lte(itemsTable.purchasedAt, thirtyDaysAgo)
+						)
+					),
+			]);
+
+			setItems(fetchedItems);
+
+			if (!isAddSheetOpen && reviewableItems.length > 0) {
+				setItemToReview(reviewableItems[0]);
+
+				setTimeout(() => {
+					if (!isAddSheetOpen) {
+						checkInSheetRef.current?.present();
+					}
+				}, 500);
+			}
+
+			const settings = settingsResult[0];
+
+			if (!settings) return;
+
+			const monthlySalary = settings.salary || 0;
+			const hourlyWage = settings.hourlyRate || 0;
+
+			if (hourlyWage === 0) return;
+
+			const totalLifeHours = monthlySalary / hourlyWage;
+
+			const usedLifeHours = fetchedItems.reduce((acc, item) => {
+				if (item.status === "anchored" || item.status === "purchased") {
+					return acc + item.timeCost;
+				}
+				return acc;
+			}, 0);
+
+			const remaining = totalLifeHours - usedLifeHours;
+			setRemainingLife(remaining.toFixed(1));
+		} catch (e) {
+			console.log("Error fetching items", e);
+		}
+	}, [isAddSheetOpen]);
+
+	useFocusEffect(
+		useCallback(() => {
+			loadData();
+		}, [loadData])
+	);
+
+	return (
+		<View style={{ flex: 1 }} className="flex flex-col gap-y-12 flex-1 pt-3 px-3">
+			<CogIcon width={36} height={36} className="self-end" />
+
+			<View className="flex flex-col gap-y-1">
+				<Text className="text-accent-success font-bold text-8xl text-center">{remainingLife}</Text>
+				<Text className="text-foreground font-medium text-6xl text-center">hours</Text>
+				<Text className="text-foreground text-center">remaining life</Text>
+			</View>
+
+			<Button onPress={handleOpen} className="w-6/12 h-12 self-center bg-muted active:bg-muted/20">
+				<Text className="text-foreground">What are you eyeing?</Text>
+			</Button>
+
+			{items.length > 0 && (
+				<View className="flex flex-col flex-1 gap-y-4 pt-2">
+					<Text className="text-foreground font-jakarta font-medium text-lg">Recent items</Text>
+
+					<ScrollView className="flex-1" contentContainerClassName="gap-y-5 pb-5">
+						{items.map((item) => (
+							<HistoryCard
+								key={item.id}
+								name={item.name}
+								price={item.price}
+								status={item.status}
+								timeCost={item.timeCost}
+								unlockedAt={item.unlockedAt}
+							/>
+						))}
+					</ScrollView>
+				</View>
+			)}
+
+			<HomeBottomSheet ref={sheetRef} onItemAdded={loadData} onChange={handleAddSheetChange} />
+
+			<CheckInBottomSheet ref={checkInSheetRef} item={itemToReview} onReviewComplete={loadData} />
+		</View>
+	);
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
