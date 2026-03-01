@@ -44,24 +44,31 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
           KEY_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          # 1. Navigate to the APK directory
           cd android/app/build/outputs/apk/release
 
-          # 2. Decode the Base64 keystore into a real file
+          # 1. Print files for debugging (just in case)
+          echo "Files in release directory:"
+          ls -la
+
+          # 2. Dynamically find the generated APK file
+          UNSIGNED_APK=$(find . -maxdepth 1 -name "*.apk" | head -n 1)
+          echo "Found APK to sign: $UNSIGNED_APK"
+
+          # 3. Decode the Keystore
           echo "$KEYSTORE_B64" | base64 --decode > release.keystore
 
-          # 3. Dynamically find the newest Android build tools installed on the runner
+          # 4. Find the newest Android build tools
           BUILD_TOOLS_PATH=$(ls -d $ANDROID_HOME/build-tools/* | tail -1)
 
-          # 4. Zipalign (Optimizes the APK memory usage)
-          $BUILD_TOOLS_PATH/zipalign -v -p 4 app-release-unsigned.apk app-release-aligned.apk
+          # 5. Zipalign the APK
+          $BUILD_TOOLS_PATH/zipalign -v -p 4 "$UNSIGNED_APK" app-release-aligned.apk
 
-          # 5. Sign the APK using your Keystore
-          $BUILD_TOOLS_PATH/apksigner sign --ks release.keystore --ks-key-alias "$KEY_ALIAS" --ks-pass "pass:$KEY_PASS" --key-pass "pass:$KEY_PASS" --out app-release.apk app-release-aligned.apk
+          # 6. Sign the APK and output as 'app-release-signed.apk'
+          $BUILD_TOOLS_PATH/apksigner sign --ks release.keystore --ks-key-alias "$KEY_ALIAS" --ks-pass "pass:$KEY_PASS" --key-pass "pass:$KEY_PASS" --out app-release-signed.apk app-release-aligned.apk
 
       - name: 🚀 Upload Signed APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/release/app-release.apk
+          files: android/app/build/outputs/apk/release/app-release-signed.apk
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
