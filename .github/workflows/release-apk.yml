@@ -38,20 +38,30 @@ jobs:
 
         run: ./gradlew assembleRelease
 
-      - name: 🔐 Sign APK
-        id: sign_app
-        uses: r0adkll/sign-android-release@v1
-        with:
-          releaseDirectory: android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEYSTORE_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          buildToolsVersion: 34.0.0
+      - name: 🔐 Sign APK Natively
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          # 1. Navigate to the APK directory
+          cd android/app/build/outputs/apk/release
+
+          # 2. Decode the Base64 keystore into a real file
+          echo "$KEYSTORE_B64" | base64 --decode > release.keystore
+
+          # 3. Dynamically find the newest Android build tools installed on the runner
+          BUILD_TOOLS_PATH=$(ls -d $ANDROID_HOME/build-tools/* | tail -1)
+
+          # 4. Zipalign (Optimizes the APK memory usage)
+          $BUILD_TOOLS_PATH/zipalign -v -p 4 app-release-unsigned.apk app-release-aligned.apk
+
+          # 5. Sign the APK using your Keystore
+          $BUILD_TOOLS_PATH/apksigner sign --ks release.keystore --ks-key-alias "$KEY_ALIAS" --ks-pass "pass:$KEY_PASS" --key-pass "pass:$KEY_PASS" --out app-release.apk app-release-aligned.apk
 
       - name: 🚀 Upload Signed APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{steps.sign_app.outputs.signedReleaseFile}}
+          files: android/app/build/outputs/apk/release/app-release.apk
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
