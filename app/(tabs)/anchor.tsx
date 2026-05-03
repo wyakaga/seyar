@@ -1,16 +1,16 @@
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { asc, eq } from "drizzle-orm";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
-import { useFocusEffect } from "expo-router";
-import { asc, eq } from "drizzle-orm";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
-import { Text } from "@/components/ui/text";
-import { Item, items as itemsTable, userSettings } from "@/db/schema";
-import { db } from "@/db/client";
 import AnchoredCard from "@/components/anchored/AnchoredCard";
-import { formatCompactCurrency } from "@/lib/currency";
 import DecisionBottomSheet from "@/components/anchored/DecisionBottomSheet";
 import AnchorIcon from "@/components/icons/AnchorIcon";
+import { Text } from "@/components/Text";
+import { db } from "@/db/client";
+import { Item, items as itemsTable, userSettings } from "@/db/schema";
+import { formatCompactCurrency } from "@/lib/currency";
 
 export default function Anchor() {
 	const sheetRef = useRef<BottomSheetModal>(null);
@@ -56,13 +56,13 @@ export default function Anchor() {
 	useFocusEffect(
 		useCallback(() => {
 			loadData();
-		}, [loadData])
+		}, [loadData]),
 	);
 
 	return (
 		<View style={{ flex: 1 }} className="flex flex-col gap-y-12 flex-1 pt-9 px-3">
 			<View className="flex flex-col gap-y-3">
-				<Text className="text-foreground text-3xl font-bold font-jakarta">Anchored</Text>
+				<Text className="text-foreground text-3xl font-bold">Anchored</Text>
 
 				<Text className="text-foreground font-jakarta">
 					{items.length} items • {formatCompactCurrency(totalOnHold, currency)} on hold
@@ -90,7 +90,7 @@ export default function Anchor() {
 						<AnchorIcon width={150} height={150} color="#E6E2D3" style={{ opacity: 0.9 }} />
 					</View>
 
-					<Text className="font-jakarta text-3xl font-bold text-foreground text-center">No Anchors Yet</Text>
+					<Text className="text-3xl font-bold text-foreground text-center">No Anchors Yet</Text>
 
 					<View className="flex flex-col gap-y-1 justify-center items-center">
 						<Text className="font-jakarta text-foreground text-center">

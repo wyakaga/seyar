@@ -1,11 +1,4 @@
-import Svg, { SvgProps, Path } from "react-native-svg";
-import { cssInterop } from "nativewind";
-
-cssInterop(Svg, {
-	className: {
-		target: "style",
-	},
-});
+import Svg, { Path, SvgProps } from "react-native-svg";
 
 const CogIcon = (props: SvgProps) => (
 	<Svg

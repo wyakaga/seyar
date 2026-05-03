@@ -1,14 +1,14 @@
+import { and, desc, eq, or, sql } from "drizzle-orm";
+import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, View } from "react-native";
-import { useFocusEffect } from "expo-router";
-import { and, desc, eq, or, sql } from "drizzle-orm";
 
-import { Item, items as itemsTable, userSettings } from "@/db/schema";
-import { Text } from "@/components/ui/text";
-import { db } from "@/db/client";
+import BearingCard from "@/components/bearing/BearingCard";
 import GhostIcon from "@/components/icons/GhostIcon";
 import WaveIcon from "@/components/icons/WaveIcon";
-import BearingCard from "@/components/bearing/BearingCard";
+import { Text } from "@/components/Text";
+import { db } from "@/db/client";
+import { Item, items as itemsTable, userSettings } from "@/db/schema";
 import { formatCompactCurrency } from "@/lib/currency";
 
 export default function Bearing() {
@@ -35,7 +35,7 @@ export default function Bearing() {
 						.select({ totalGhost: sql<number>`sum(${itemsTable.timeCost})`.mapWith(Number) })
 						.from(itemsTable)
 						.where(
-							and(eq(itemsTable.status, "purchased"), eq(itemsTable.reviewStatus, "regretted"))
+							and(eq(itemsTable.status, "purchased"), eq(itemsTable.reviewStatus, "regretted")),
 						),
 
 					db
@@ -50,8 +50,8 @@ export default function Bearing() {
 						.where(
 							or(
 								and(eq(itemsTable.status, "purchased"), eq(itemsTable.reviewStatus, "regretted")),
-								eq(itemsTable.status, "rejected")
-							)
+								eq(itemsTable.status, "rejected"),
+							),
 						)
 						.orderBy(desc(itemsTable.createdAt)),
 					db.select().from(userSettings).limit(1),
@@ -112,15 +112,15 @@ export default function Bearing() {
 	useFocusEffect(
 		useCallback(() => {
 			loadData();
-		}, [loadData])
+		}, [loadData]),
 	);
 
 	return (
 		<View style={{ flex: 1 }} className="flex flex-col gap-y-12 flex-1 pt-9 px-3">
-			<Text className="text-foreground text-3xl font-bold font-jakarta">Bearing</Text>
+			<Text className="text-foreground text-3xl font-bold">Bearing</Text>
 
 			<View className="flex flex-col justify-items items-center gap-y-3 p-4 bg-secondary rounded-lg">
-				<Text className="font-jakarta font-bold text-5xl text-accent-success">{`${totalReclaimed.toFixed(1)} hours`}</Text>
+				<Text className="font-bold text-5xl text-accent-success">{`${totalReclaimed.toFixed(1)} hours`}</Text>
 
 				<Text className="font-jakarta text-foreground">life reclaimed</Text>
 			</View>
@@ -130,10 +130,10 @@ export default function Bearing() {
 					<View className="flex flex-row gap-x-3 items-center justify-center">
 						<GhostIcon />
 
-						<Text className="font-jakarta font-bold text-xl text-foreground">Ghost hours</Text>
+						<Text className="font-bold text-xl text-foreground">Ghost hours</Text>
 					</View>
 
-					<Text className="font-jakarta font-bold text-3xl text-foreground">{`${ghostHour.toFixed(1)} hours`}</Text>
+					<Text className="font-bold text-3xl text-foreground">{`${ghostHour.toFixed(1)} hours`}</Text>
 
 					<Text className="font-jakarta text-xs text-foreground text-center">
 						{getGhostText(ghostHour, workSchedule.hoursPerDay, workSchedule.daysPerMonth)}
@@ -144,10 +144,10 @@ export default function Bearing() {
 					<View className="flex flex-row gap-x-3 items-center justify-center">
 						<WaveIcon />
 
-						<Text className="font-jakarta font-bold text-xl text-foreground">Regret rate</Text>
+						<Text className="font-bold text-xl text-foreground">Regret rate</Text>
 					</View>
 
-					<Text className="font-jakarta font-bold text-3xl text-foreground">{`${regretRate.toFixed(1)}%`}</Text>
+					<Text className="font-bold text-3xl text-foreground">{`${regretRate.toFixed(1)}%`}</Text>
 
 					<Text className="font-jakarta text-xs text-foreground text-center">
 						Percentage of labor spent in vain
@@ -156,7 +156,7 @@ export default function Bearing() {
 			</View>
 
 			<View className="flex flex-col flex-1 gap-y-5">
-				<Text className="font-jakarta font-bold text-3xl">History</Text>
+				<Text className="font-bold text-3xl">History</Text>
 
 				{items.length > 0 ? (
 					<FlatList

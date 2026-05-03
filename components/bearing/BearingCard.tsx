@@ -1,9 +1,9 @@
 import { View } from "react-native";
 
-import HeartIcon from "../icons/HeartIcon";
-import HeartCrackIcon from "../icons/HeartCrackIcon";
-import { Text } from "../ui/text";
+import { Text } from "@/components/Text";
 import { cn } from "@/lib/utils";
+import HeartCrackIcon from "../icons/HeartCrackIcon";
+import HeartIcon from "../icons/HeartIcon";
 
 interface Props {
 	status: "anchored" | "purchased" | "rejected";

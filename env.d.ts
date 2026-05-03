@@ -1,17 +1,17 @@
-/// <reference types="nativewind/types" />
+/// <reference types="uniwind/types" />
 
 // Tell TypeScript that PNGs are valid modules
 declare module "*.png" {
-  const value: import("react-native").ImageSourcePropType;
-  export default value;
+	const value: import("react-native").ImageSourcePropType;
+	export default value;
 }
 
 declare module "*.jpg" {
-  const value: import("react-native").ImageSourcePropType;
-  export default value;
+	const value: import("react-native").ImageSourcePropType;
+	export default value;
 }
 
 declare module "*.jpeg" {
-  const value: import("react-native").ImageSourcePropType;
-  export default value;
+	const value: import("react-native").ImageSourcePropType;
+	export default value;
 }
