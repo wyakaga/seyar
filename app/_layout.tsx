@@ -113,6 +113,7 @@ function AppContent() {
     >
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="onboarding/index" />
+      <Stack.Screen name="setting" />
     </Stack>
   );
 }
@@ -120,7 +121,7 @@ function AppContent() {
 export default function RootLayout() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAV_THEME.dark.colors.background }}>
         <HeroUINativeProvider>
           <ThemeProvider value={NAV_THEME.dark}>
             <BottomSheetModalProvider>
