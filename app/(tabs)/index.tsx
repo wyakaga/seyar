@@ -1,13 +1,13 @@
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { Button } from "heroui-native";
 
 import { Text } from "@/components/Text";
 import CheckInBottomSheet from "@/components/home/CheckInBottomSheet";
 import HistoryCard from "@/components/home/HistoryCard";
 import HomeBottomSheet from "@/components/home/HomeBottomSheet";
 import CogIcon from "@/components/icons/CogIcon";
-import { Button } from "heroui-native";
 import { useRemainingLife } from "@/hooks/useRemainingLife";
 import { usePendingReviews } from "@/hooks/usePendingReviews";
 import { useItemManagement } from "@/hooks/useItemManagement";
@@ -46,7 +46,9 @@ export default function Index() {
 
 	return (
 		<View style={{ flex: 1 }} className="flex-1 flex flex-col gap-y-12 px-3 pt-3">
-			<CogIcon width={36} height={36} className="self-end" />
+			<Pressable onPress={() => router.push("../setting")} className="self-end active:opacity-70">
+				<CogIcon width={36} height={36} />
+			</Pressable>
 
 			<View className="flex flex-col gap-y-1">
 				<Text className="text-accent-success text-center text-8xl font-bold">{remainingLife}</Text>
