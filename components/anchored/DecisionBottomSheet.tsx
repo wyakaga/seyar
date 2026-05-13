@@ -1,15 +1,14 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from "react";
-import { View, StyleSheet } from "react-native";
-import { eq } from "drizzle-orm";
-import { BottomSheetBackdrop, BottomSheetModal } from "@gorhom/bottom-sheet";
-import { BlurView } from "expo-blur";
+import { StyleSheet, View } from "react-native";
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { differenceInDays } from "date-fns";
+import { eq } from "drizzle-orm";
+import { BlurView } from "expo-blur";
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from "react";
+import { Button } from "heroui-native";
 
-import { Item, items as itemsTable } from "@/db/schema";
+import { Text } from "@/components/Text";
 import { db } from "@/db/client";
-import { Text } from "../ui/text";
-import { Button } from "../ui/button";
-import { BottomSheet } from "../ui/bottom-sheet";
+import { Item, items as itemsTable } from "@/db/schema";
 import { formatCompactCurrency } from "@/lib/currency";
 
 interface Props {
@@ -57,7 +56,7 @@ const DecisionBottomSheet = forwardRef<BottomSheetModal, Props>(
 					/>
 				</BottomSheetBackdrop>
 			),
-			[]
+			[],
 		);
 
 		const handleDecision = async (status: "purchased" | "rejected") => {
@@ -81,61 +80,89 @@ const DecisionBottomSheet = forwardRef<BottomSheetModal, Props>(
 		};
 
 		return (
-			<BottomSheet ref={internalRef} snapPoints={snapPoints} backdropComponent={renderBackdrop}>
-				{item ? (
-					<View className="flex-1 gap-y-6 bg-background">
-						<View className="items-center gap-y-2">
-							<Text className="text-3xl font-bold text-foreground font-jakarta">
-								{hoursCost} hours of your life
+			<BottomSheetModal
+				ref={internalRef}
+				snapPoints={snapPoints}
+				backdropComponent={renderBackdrop}
+				backgroundStyle={{ backgroundColor: "#18181B" }}
+				handleIndicatorStyle={{ backgroundColor: "#71717A" }}
+			>
+				<BottomSheetView style={{ flex: 1, padding: 24 }}>
+					{item ? (
+						<View className="flex-1 gap-y-6 bg-background">
+							<View className="items-center gap-y-2">
+								<Text className="text-3xl font-bold text-foreground">
+									{hoursCost} hours of your life
+								</Text>
+
+								<Text className="text-foreground text-center font-jakarta">
+									{item.name} ({formattedPrice})
+								</Text>
+							</View>
+
+							<Text className="text-center text-foreground font-jakarta">
+								You waited for {waitTime} {dayLabel}. Do you still want this?
 							</Text>
 
-							<Text className="text-foreground text-center font-jakarta">
-								{item.name} ({formattedPrice})
-							</Text>
+							<View className="gap-y-4">
+								<Button
+									onPress={() => handleDecision("rejected")}
+									className="w-full h-14 bg-primary rounded-lg active:bg-primary/80"
+									animation={{
+										highlight: {
+											backgroundColor: {
+												value: "#6366f1",
+											},
+											opacity: {
+												value: [0, 0.5],
+											},
+										},
+									}}
+								>
+									<View>
+										<Text className="text-foreground font-medium text-center text-lg">
+											No, I&apos;m Free.
+										</Text>
+
+										<Text className="text-muted-foreground font-jakarta text-center text-sm">
+											Save {formattedPrice}
+										</Text>
+									</View>
+								</Button>
+
+								<Button
+									onPress={() => handleDecision("purchased")}
+									className="w-full h-14 bg-secondary border border-muted rounded-lg active:bg-secondary/80"
+									animation={{
+										highlight: {
+											backgroundColor: {
+												value: "#2b2b2f",
+											},
+											opacity: {
+												value: [0, 0.5],
+											},
+										},
+									}}
+								>
+									<View>
+										<Text className="text-foreground font-medium text-center text-lg">
+											Yes, Buy It.
+										</Text>
+
+										<Text className="text-muted-foreground text-center text-sm">
+											Spend {hoursCost} hours
+										</Text>
+									</View>
+								</Button>
+							</View>
 						</View>
-
-						<Text className="text-center text-foreground font-jakarta">
-							You waited for {waitTime} {dayLabel}. Do you still want this?
-						</Text>
-
-						<View className="gap-y-4">
-							<Button
-								onPress={() => handleDecision("rejected")}
-								className="w-full h-14 bg-primary rounded-lg active:bg-primary/80"
-							>
-								<View>
-									<Text className="text-foreground font-jakarta font-medium text-center text-lg">
-										No, I&apos;m Free.
-									</Text>
-
-									<Text className="text-muted-foreground font-jakarta text-center text-sm">
-										Save {formattedPrice}
-									</Text>
-								</View>
-							</Button>
-
-							<Button
-								onPress={() => handleDecision("purchased")}
-								className="w-full h-14 bg-secondary border border-muted rounded-lg active:bg-secondary/80"
-							>
-								<View>
-									<Text className="text-foreground font-jakarta font-medium text-center text-lg">
-										Yes, Buy It.
-									</Text>
-
-									<Text className="text-muted-foreground text-center text-sm">
-										Spend {hoursCost} hours
-									</Text>
-								</View>
-							</Button>
-						</View>
-					</View>
-				) : (
-					<View />
-				)}
-			</BottomSheet>
+					) : (
+						<View />
+					)}
+				</BottomSheetView>
+			</BottomSheetModal>
 		);
-	}
+	},
 );
 
 DecisionBottomSheet.displayName = "DecisionBottomSheet";

@@ -1,141 +1,136 @@
-import "react-native-get-random-values";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, DeviceEventEmitter, View } from "react-native";
-import { Stack, useRouter, useSegments } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PortalHost } from "@rn-primitives/portal";
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { eq } from "drizzle-orm";
-import * as SQLite from "expo-sqlite";
+import { db } from "@/db/client";
+import { userSettings } from "@/db/schema";
+import { NAV_THEME } from "@/lib/theme";
 import {
-	PlusJakartaSans_400Regular,
-	PlusJakartaSans_500Medium,
-	PlusJakartaSans_700Bold,
-	useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_700Bold,
+  useFonts,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import { useColorScheme } from "nativewind";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { ThemeProvider } from "@react-navigation/native";
+import { eq } from "drizzle-orm";
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import { Stack, useRouter, useSegments } from "expo-router";
+import * as SQLite from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { useDrizzleStudio } from 'expo-drizzle-studio-plugin';
+import { HeroUINativeProvider } from "heroui-native";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-get-random-values";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Uniwind } from "uniwind";
+import migrations from "../src/drizzle/migrations";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "@/components/ErrorFallback";
+import * as SplashScreen from "expo-splash-screen";
 
 import "../global.css";
 
-import { db } from "@/db/client";
-import { userSettings } from "@/db/schema";
-import migrations from "../src/drizzle/migrations";
-import { NAV_THEME } from "@/lib/theme";
-import { BottomSheetModalProvider } from "@/components/ui/bottom-sheet";
+SplashScreen.preventAutoHideAsync();
+Uniwind.setTheme("dark");
 
 const dbase = SQLite.openDatabaseSync("app.db");
 
+function AppContent() {
+  const router = useRouter();
+  const segments = useSegments();
+  const insets = useSafeAreaInsets();
+  const { success: migrationSuccess } = useMigrations(db, migrations);
+
+  const hasOnboarded = useAuthStore((state) => state.hasOnboarded);
+  const setHasOnboarded = useAuthStore((state) => state.setHasOnboarded);
+  const isReady = useAuthStore((state) => state.isReady);
+  const setIsReady = useAuthStore((state) => state.setIsReady);
+
+  useDrizzleStudio(dbase);
+
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_700Bold,
+  });
+
+  useEffect(() => {
+    if (!migrationSuccess) return;
+
+    const checkUserStatus = async () => {
+      try {
+        const result = await db
+          .select()
+          .from(userSettings)
+          .where(eq(userSettings.id, 1));
+        if (result.length > 0 && result[0].isOnboarded) {
+          setHasOnboarded(true);
+        } else {
+          setHasOnboarded(false);
+        }
+      } catch (e) {
+        console.error("Error reading settings:", e);
+        setHasOnboarded(false);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    checkUserStatus();
+  }, [migrationSuccess, setHasOnboarded, setIsReady]);
+
+  useEffect(() => {
+    if (isReady && fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [isReady, fontsLoaded]);
+
+  useEffect(() => {
+    if (!isReady || !fontsLoaded || !migrationSuccess) return;
+
+    const inOnboardingGroup = segments[0] === "onboarding";
+
+    if (!hasOnboarded && !inOnboardingGroup) {
+      router.replace("/onboarding");
+    } else if (hasOnboarded && inOnboardingGroup) {
+      router.replace("/");
+    }
+  }, [isReady, hasOnboarded, segments, router, fontsLoaded, migrationSuccess]);
+
+  if (!migrationSuccess || !isReady || !fontsLoaded) {
+    return null;
+  }
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: "#121212",
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      }}
+    >
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="onboarding/index" />
+      <Stack.Screen name="setting" />
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
-	const router = useRouter();
-	const segments = useSegments();
-	const insets = useSafeAreaInsets();
-	const { colorScheme, setColorScheme } = useColorScheme();
-	const { success: migrationSuccess } = useMigrations(db, migrations);
-
-	useDrizzleStudio(dbase);
-
-	const [fontsLoaded] = useFonts({
-		PlusJakartaSans_400Regular,
-		PlusJakartaSans_500Medium,
-		PlusJakartaSans_700Bold,
-	});
-
-	const [isReady, setIsReady] = useState(false);
-	const [hasOnboarded, setHasOnboarded] = useState(false);
-
-	useEffect(() => {
-		if (colorScheme !== "dark") {
-			setColorScheme("dark");
-		}
-	}, [colorScheme, setColorScheme]);
-
-	useEffect(() => {
-		if (!migrationSuccess) return;
-
-		const checkUserStatus = async () => {
-			try {
-				const result = await db.select().from(userSettings).where(eq(userSettings.id, 1));
-				if (result.length > 0 && result[0].isOnboarded) {
-					setHasOnboarded(true);
-				} else {
-					setHasOnboarded(false);
-				}
-			} catch (e) {
-				console.error("Error reading settings:", e);
-				setHasOnboarded(false);
-			} finally {
-				setIsReady(true);
-			}
-		};
-
-		checkUserStatus();
-
-		const subscription = DeviceEventEmitter.addListener("onboarding_completed", () => {
-			console.log("Event received: Refreshing user status...");
-			checkUserStatus();
-		});
-
-		return () => {
-			subscription.remove();
-		};
-	}, [migrationSuccess]);
-
-	const inAuthGroup = segments[0] === "(tabs)";
-	const isRedirecting =
-		isReady && ((hasOnboarded && !inAuthGroup) || (!hasOnboarded && inAuthGroup));
-
-	useEffect(() => {
-		if (!isReady) return;
-
-		if (!hasOnboarded && inAuthGroup) {
-			router.replace("/onboarding");
-		} else if (hasOnboarded && !inAuthGroup) {
-			router.replace("/");
-		}
-	}, [isReady, hasOnboarded, segments, router, inAuthGroup]);
-
-	if (!migrationSuccess || !isReady || !fontsLoaded || isRedirecting) {
-		return (
-			<View
-				style={{
-					flex: 1,
-					backgroundColor: "#121212",
-					justifyContent: "center",
-					alignItems: "center",
-				}}
-			>
-				<ActivityIndicator size="large" color="#5B67CA" />
-			</View>
-		);
-	}
-
-	return (
-		<ThemeProvider value={NAV_THEME.dark}>
-			<GestureHandlerRootView style={{ flex: 1 }}>
-				<BottomSheetModalProvider>
-					<StatusBar style="light" />
-
-					<Stack
-						screenOptions={{
-							headerShown: false,
-							contentStyle: {
-								backgroundColor: "#121212",
-								paddingTop: insets.top,
-								paddingBottom: insets.bottom,
-							},
-						}}
-					>
-						<Stack.Screen name="(tabs)/index" />
-						<Stack.Screen name="onboarding/index" />
-					</Stack>
-
-					<PortalHost />
-				</BottomSheetModalProvider>
-			</GestureHandlerRootView>
-		</ThemeProvider>
-	);
+  return (
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAV_THEME.dark.colors.background }}>
+        <HeroUINativeProvider>
+          <ThemeProvider value={NAV_THEME.dark}>
+            <BottomSheetModalProvider>
+              <StatusBar style="light" />
+              <AppContent />
+            </BottomSheetModalProvider>
+          </ThemeProvider>
+        </HeroUINativeProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
+  );
 }

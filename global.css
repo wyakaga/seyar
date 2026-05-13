@@ -1,99 +1,58 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
 
-@layer base {
-  :root {
-    --background: 47 28% 86%;  /* #E6E2D3 */
-    --foreground: 240 5% 11%;  /* #1A1A1D */
+/* Tell Tailwind v4 where to scan for class names */
+@source "./app/**/*.{js,jsx,ts,tsx}";
+@source "./components/**/*.{js,jsx,ts,tsx}";
+@source './node_modules/heroui-native/lib';
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 5% 11%;
+:root {
+	--background: #1a1a1d;
+	--foreground: #e6e2d3;
+	--surface: #2b2b2f;
+	--surface-foreground: #e6e2d3;
+	--default: #2b2b2f;
+	--default-foreground: #e6e2d3;
+	--accent: #6366f1;
+	--accent-foreground: #ffffff;
+	--danger: #c75b5b;
+	--danger-foreground: #ffffff;
+	--muted: #71717a;
+	--border: #2b2b2f;
+	--field-background: #2b2b2f;
+	--field-border: transparent;
+}
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 5% 11%;
+/* App-specific custom utilities — keeps existing className strings working */
+@theme {
+	/* Map old token names to HeroUI equivalents so no screen/component changes needed */
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-primary: #6366f1;
+	--color-primary-foreground: var(--accent-foreground);
+	--color-secondary: var(--default);
+	--color-secondary-foreground: var(--default-foreground);
+	--color-muted-foreground: var(--muted);
+	--color-bg-primary: var(--background);
+	--color-destructive: var(--danger);
+	--color-destructive-foreground: var(--danger-foreground);
+	--color-card: var(--surface);
+	--color-card-foreground: var(--surface-foreground);
+	--color-popover: var(--surface);
+	--color-popover-foreground: var(--surface-foreground);
+	--color-input: var(--field-background);
+	--color-ring: var(--accent);
 
-    --primary: 239 84% 67%;    /* #6366F1 (Your accent-primary) */
-    --primary-foreground: 0 0% 100%;
+	/* App-specific semantic colors */
+	--color-accent-success: #8a9a5b;
+	--color-accent-info: #4e6a8a;
+	--color-accent-gray: var(--default);
+	--color-accent-primary: var(--accent);
+	--color-accent-danger: var(--danger);
 
-    --secondary: 240 4% 18%;   /* #2B2B2F */
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 240 5% 26%;       /* #3F3F46 */
-    --muted-foreground: 240 5% 65%;
-
-    --accent: 240 5% 96%;
-    --accent-foreground: 240 5% 11%;
-
-    --destructive: 0 48% 57%;  /* #C75B5B */
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 239 84% 67%;
-
-    --radius: 0.5rem;
-
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark:root {
-    /* DARK MODE (Mapped to YOUR specific variables)
-    */
-    --background: 240 5% 11%;  /* #1A1A1D (Your bg-primary) */
-    --foreground: 47 28% 86%;  /* #E6E2D3 (Your primary text) */
-
-    --card: 240 5% 11%;        /* Same as bg */
-    --card-foreground: 47 28% 86%;
-
-    --popover: 240 5% 11%;
-    --popover-foreground: 47 28% 86%;
-
-    --primary: 239 84% 67%;    /* #6366F1 (Your accent-primary) */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 240 4% 18%;   /* #2B2B2F (Your secondary) */
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 240 5% 26%;       /* #3F3F46 (Your accent-gray) */
-    --muted-foreground: 240 5% 65%;
-
-    --accent: 240 4% 18%;
-    --accent-foreground: 47 28% 86%;
-
-    --destructive: 0 48% 57%;  /* #C75B5B (Your accent-danger) */
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 4% 18%;
-    --input: 240 4% 18%;
-    --ring: 239 84% 67%;
-
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+	/* Custom fonts */
+	--font-jakarta: PlusJakartaSans_400Regular;
+	--font-medium: PlusJakartaSans_500Medium;
+	--font-bold: PlusJakartaSans_700Bold;
 }

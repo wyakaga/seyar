@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { DeviceEventEmitter, View } from "react-native";
-import { useRouter } from "expo-router";
+import { View } from "react-native";
 
 import Welcome from "@/components/onboarding/Welcome";
 import Salary from "@/components/onboarding/Salary";
@@ -9,10 +8,13 @@ import TimeWorth from "@/components/onboarding/TimeWorth";
 import { db } from "@/db/client";
 import { userSettings } from "@/db/schema";
 import { OnboardingData } from "@/types/onboarding.type";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useErrorService } from "@/hooks/useErrorService";
 
 const STEPS = [Welcome, Salary, WorkHour, TimeWorth];
 export default function Onboarding() {
-	const router = useRouter();
+	const { setHasOnboarded } = useAuthStore();
+	const { handleError } = useErrorService();
 
 	const [currentStep, setCurrentStep] = useState(0);
 	const [formData, setFormData] = useState({
@@ -60,11 +62,10 @@ export default function Onboarding() {
 					},
 				});
 
-			DeviceEventEmitter.emit("onboarding_completed");
-
-			router.replace("/");
+			setHasOnboarded(true);
 		} catch (error) {
-			console.error(error);
+
+			handleError(error, "Onboarding Failed");
 		}
 	};
 
@@ -92,3 +93,4 @@ export default function Onboarding() {
 		</View>
 	);
 }
+

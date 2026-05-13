@@ -1,14 +1,14 @@
+import { differenceInDays, differenceInHours } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
-import { differenceInDays, differenceInHours } from "date-fns";
 
-import AnchorIcon from "../icons/AnchorIcon";
-import CreditCardIcon from "../icons/CreditCardIcon";
-import ShieldIcon from "../icons/ShieldIcon";
-import { Text } from "../ui/text";
+import { Text } from "@/components/Text";
 import { db } from "@/db/client";
 import { userSettings } from "@/db/schema";
 import { formatCompactCurrency } from "@/lib/currency";
+import AnchorIcon from "../icons/AnchorIcon";
+import CreditCardIcon from "../icons/CreditCardIcon";
+import ShieldIcon from "../icons/ShieldIcon";
 
 interface Props {
 	status: "anchored" | "purchased" | "rejected";
@@ -68,15 +68,13 @@ const HistoryCard = ({ status, name, price, unlockedAt, timeCost }: Props) => {
 
 					<View className="flex flex-row gap-x-3 items-center">
 						{status === "anchored" ? (
-							<Text className="text-sm text-accent-info font-medium font-jakarta">
-								{formattedTimeLeft}
-							</Text>
+							<Text className="text-sm text-accent-info font-medium">{formattedTimeLeft}</Text>
 						) : status === "purchased" ? (
-							<Text className="text-sm text-accent-danger font-medium font-jakarta">
+							<Text className="text-sm text-accent-danger font-medium">
 								{`-${timeCost?.toFixed(1)} hours`}
 							</Text>
 						) : (
-							<Text className="text-sm text-accent-success font-medium font-jakarta">
+							<Text className="text-sm text-accent-success font-medium">
 								{`+${timeCost?.toFixed(1)} hours saved`}
 							</Text>
 						)}
@@ -84,9 +82,7 @@ const HistoryCard = ({ status, name, price, unlockedAt, timeCost }: Props) => {
 				</View>
 			</View>
 
-			<Text className="font-jakarta font-medium text-lg">
-				{formatCompactCurrency(price, currency)}
-			</Text>
+			<Text className="font-medium text-lg">{formatCompactCurrency(price, currency)}</Text>
 		</View>
 	);
 };
