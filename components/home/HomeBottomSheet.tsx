@@ -10,8 +10,9 @@ import { Button, Input, Label } from 'heroui-native';
 
 import { Text } from '@/components/Text';
 import { db } from '@/db/client';
-import { items, userSettings } from '@/db/schema';
+import { items } from '@/db/schema';
 import { cn } from '@/lib/utils';
+import { getUserSettings } from '@/lib/secureStore';
 import { AnchorDuration, DurationOption } from './AnchorDuration';
 import { formatPrice } from '@/lib/formatPrice';
 import { useErrorService } from '@/hooks/useErrorService';
@@ -120,14 +121,12 @@ const HomeBottomSheet = ({ ref, onItemAdded, onChange }: Props) => {
       handleError(error, 'Submission Failed');
     }
   };
-
   useEffect(() => {
     const fetchSetting = async () => {
       try {
-        const setting = await db.select().from(userSettings).limit(1);
-
-        if (setting.length > 0) {
-          setHourlyWage(setting[0].hourlyRate);
+        const setting = await getUserSettings();
+        if (setting) {
+          setHourlyWage(setting.hourlyRate);
         }
       } catch (e) {
         handleError(e, 'Settings Load Failed');
