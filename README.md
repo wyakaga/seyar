@@ -84,7 +84,7 @@ Seyar is built using a modern, performant, and premium React Native architecture
 The project represents a clean, modular file-based routing architecture:
 
 ```filepath
-saving-app/
+seyar/
 ├── app/                      # Expo Router navigation routes
 │   ├── (tabs)/               # Bottom tab screens
 │   │   ├── _layout.tsx       # Bottom navigation layout configuration
