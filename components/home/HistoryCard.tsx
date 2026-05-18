@@ -1,89 +1,87 @@
-import { differenceInDays, differenceInHours } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
-import { View } from "react-native";
+import { differenceInDays, differenceInHours } from 'date-fns';
+import { useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
 
-import { Text } from "@/components/Text";
-import { db } from "@/db/client";
-import { userSettings } from "@/db/schema";
-import { formatCompactCurrency } from "@/lib/currency";
-import AnchorIcon from "../icons/AnchorIcon";
-import CreditCardIcon from "../icons/CreditCardIcon";
-import ShieldIcon from "../icons/ShieldIcon";
+import { Text } from '@/components/Text';
+import { getUserSettings } from '@/lib/secureStore';
+import { formatCompactCurrency } from '@/lib/currency';
+import AnchorIcon from '../icons/AnchorIcon';
+import CreditCardIcon from '../icons/CreditCardIcon';
+import ShieldIcon from '../icons/ShieldIcon';
 
 interface Props {
-	status: "anchored" | "purchased" | "rejected";
-	name: string;
-	price: number;
-	unlockedAt: Date | null;
-	timeCost?: number;
+  status: 'anchored' | 'purchased' | 'rejected';
+  name: string;
+  price: number;
+  unlockedAt: Date | null;
+  timeCost?: number;
 }
 
 const HistoryCard = ({ status, name, price, unlockedAt, timeCost }: Props) => {
-	const [currency, setCurrency] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<string | null>(null);
 
-	const formattedTimeLeft = useMemo(() => {
-		if (!unlockedAt) return "";
+  const formattedTimeLeft = useMemo(() => {
+    if (!unlockedAt) return '';
 
-		const now = new Date();
-		const hours = differenceInHours(unlockedAt, now);
+    const now = new Date();
+    const hours = differenceInHours(unlockedAt, now);
 
-		if (hours > 24) {
-			const days = differenceInDays(unlockedAt, now);
-			return `${days}d left`;
-		}
+    if (hours > 24) {
+      const days = differenceInDays(unlockedAt, now);
+      return `${days}d left`;
+    }
 
-		if (hours <= 0) return "Ready";
-		return `${hours}h left`;
-	}, [unlockedAt]);
+    if (hours <= 0) return 'Ready';
+    return `${hours}h left`;
+  }, [unlockedAt]);
 
-	useEffect(() => {
-		const fetchSetting = async () => {
-			try {
-				const setting = await db.select().from(userSettings).limit(1);
+  useEffect(() => {
+    const fetchSetting = async () => {
+      try {
+        const setting = await getUserSettings();
+        if (setting) {
+          setCurrency(setting.currency);
+        }
+      } catch (e) {
+        console.error('Error fetching settings', e);
+      }
+    };
 
-				if (setting.length > 0) {
-					setCurrency(setting[0].currency);
-				}
-			} catch (e) {
-				console.log("Error fetching settings", e);
-			}
-		};
+    fetchSetting();
+  }, []);
 
-		fetchSetting();
-	}, []);
+  return (
+    <View className="bg-secondary flex flex-row items-center justify-between rounded-md p-3">
+      <View className="flex flex-row items-center gap-x-3">
+        {status === 'anchored' ? (
+          <AnchorIcon width={28} height={28} color={'#4E6A8A'} />
+        ) : status === 'purchased' ? (
+          <CreditCardIcon width={28} height={28} color={'#C75B5B'} />
+        ) : (
+          <ShieldIcon width={28} height={28} color={'#8A9A5B'} />
+        )}
 
-	return (
-		<View className="flex flex-row justify-between items-center p-3 rounded-md bg-secondary">
-			<View className="flex flex-row gap-x-3 items-center">
-				{status === "anchored" ? (
-					<AnchorIcon width={28} height={28} color={"#4E6A8A"} />
-				) : status === "purchased" ? (
-					<CreditCardIcon width={28} height={28} color={"#C75B5B"} />
-				) : (
-					<ShieldIcon width={28} height={28} color={"#8A9A5B"} />
-				)}
+        <View className="flex flex-col gap-y-3">
+          <Text className="text-foreground font-jakarta">{name}</Text>
 
-				<View className="flex flex-col gap-y-3">
-					<Text className="text-foreground font-jakarta">{name}</Text>
+          <View className="flex flex-row items-center gap-x-3">
+            {status === 'anchored' ? (
+              <Text className="text-accent-info text-sm font-medium">{formattedTimeLeft}</Text>
+            ) : status === 'purchased' ? (
+              <Text className="text-accent-danger text-sm font-medium">
+                {`-${timeCost?.toFixed(1)} hours`}
+              </Text>
+            ) : (
+              <Text className="text-accent-success text-sm font-medium">
+                {`+${timeCost?.toFixed(1)} hours saved`}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
 
-					<View className="flex flex-row gap-x-3 items-center">
-						{status === "anchored" ? (
-							<Text className="text-sm text-accent-info font-medium">{formattedTimeLeft}</Text>
-						) : status === "purchased" ? (
-							<Text className="text-sm text-accent-danger font-medium">
-								{`-${timeCost?.toFixed(1)} hours`}
-							</Text>
-						) : (
-							<Text className="text-sm text-accent-success font-medium">
-								{`+${timeCost?.toFixed(1)} hours saved`}
-							</Text>
-						)}
-					</View>
-				</View>
-			</View>
-
-			<Text className="font-medium text-lg">{formatCompactCurrency(price, currency)}</Text>
-		</View>
-	);
+      <Text className="text-lg font-medium">{formatCompactCurrency(price, currency)}</Text>
+    </View>
+  );
 };
 export default HistoryCard;

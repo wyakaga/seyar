@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react';
-import { and, gte, inArray, InferSelectModel, lt, sql } from 'drizzle-orm';
+import { and, gte, inArray, lt, sql } from 'drizzle-orm';
 import { addMonths, startOfMonth } from 'date-fns';
-import { items as itemsTable, userSettings } from '@/db/schema';
+import { items as itemsTable } from '@/db/schema';
 import { db } from '@/db/client';
 import { useFocusEffect } from 'expo-router';
+import { UserSettings } from '@/lib/secureStore';
 
-type Settings = InferSelectModel<typeof userSettings>;
-
-export const useRemainingLife = (_items: any[], settings: Settings | undefined) => {
+export const useRemainingLife = (_items: any[], settings: UserSettings | undefined) => {
   const [remainingLife, setRemainingLife] = useState('0.0');
 
   const calculate = useCallback(async () => {

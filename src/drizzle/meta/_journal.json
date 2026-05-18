@@ -15,6 +15,13 @@
       "when": 1770087784626,
       "tag": "0001_friendly_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779071638930,
+      "tag": "0002_loud_firebird",
+      "breakpoints": true
     }
   ]
 }

@@ -3,12 +3,13 @@
 import journal from './meta/_journal.json';
 import m0000 from './0000_dapper_speedball.sql';
 import m0001 from './0001_friendly_sphinx.sql';
+import m0002 from './0002_loud_firebird.sql';
 
-  export default {
-    journal,
-    migrations: {
-      m0000,
-m0001
-    }
-  }
-  
+export default {
+  journal,
+  migrations: {
+    m0000,
+    m0001,
+    m0002,
+  },
+};
