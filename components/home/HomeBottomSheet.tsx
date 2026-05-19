@@ -9,8 +9,7 @@ import { z } from 'zod';
 import { Button, Input, Label } from 'heroui-native';
 
 import { Text } from '@/components/Text';
-import { db } from '@/db/client';
-import { items } from '@/db/schema';
+import { itemRepository } from '@/lib/repositories/itemRepository';
 import { cn } from '@/lib/utils';
 import { getUserSettings } from '@/lib/secureStore';
 import { AnchorDuration, DurationOption } from './AnchorDuration';
@@ -97,7 +96,7 @@ const HomeBottomSheet = ({ ref, onItemAdded, onChange }: Props) => {
         unlockedAt = addWeeks(now, 1);
       }
 
-      await db.insert(items).values({
+      await itemRepository.insertItem({
         name: data.name,
         price: Number(data.price),
         timeCost: parseFloat(hoursOfLife),

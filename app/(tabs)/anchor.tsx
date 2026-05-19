@@ -1,5 +1,4 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { asc, eq } from 'drizzle-orm';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { FlatList, View } from 'react-native';
@@ -8,9 +7,9 @@ import AnchoredCard from '@/components/anchored/AnchoredCard';
 import DecisionBottomSheet from '@/components/anchored/DecisionBottomSheet';
 import AnchorIcon from '@/components/icons/AnchorIcon';
 import { Text } from '@/components/Text';
-import { db } from '@/db/client';
-import { Item, items as itemsTable } from '@/db/schema';
+import { Item } from '@/db/schema';
 import { formatCompactCurrency } from '@/lib/currency';
+import { itemRepository } from '@/lib/repositories/itemRepository';
 import { getUserSettings } from '@/lib/secureStore';
 
 export default function Anchor() {
@@ -30,11 +29,7 @@ export default function Anchor() {
   const loadData = useCallback(async () => {
     try {
       const [fetchedItems, settingsResult] = await Promise.all([
-        db
-          .select()
-          .from(itemsTable)
-          .where(eq(itemsTable.status, 'anchored'))
-          .orderBy(asc(itemsTable.unlockedAt)),
+        itemRepository.getAnchoredItems(),
         getUserSettings(),
       ]);
 
