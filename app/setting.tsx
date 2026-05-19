@@ -8,9 +8,7 @@ import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Text } from '@/components/Text';
 import XIcon from '@/components/icons/XIcon';
 import { useItemManagement } from '@/hooks/useItemManagement';
-import { db } from '@/db/client';
-import { items as itemsTable } from '@/db/schema';
-import { sql } from 'drizzle-orm';
+import { itemRepository } from '@/lib/repositories/itemRepository';
 import { saveUserSettings } from '@/lib/secureStore';
 import CURRENCIES from '@/constants/currencies';
 import { formatPrice } from '@/lib/formatPrice';
@@ -110,9 +108,7 @@ export default function Setting() {
       });
 
       if (hourlyRate > 0) {
-        await db.update(itemsTable).set({
-          timeCost: sql`ROUND(${itemsTable.price} / ${hourlyRate}, 1)`,
-        });
+        await itemRepository.updateAllItemsTimeCost(hourlyRate);
       }
 
       await loadData();

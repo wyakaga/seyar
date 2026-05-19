@@ -1,4 +1,3 @@
-import { and, desc, eq, or, sql } from 'drizzle-orm';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, View } from 'react-native';
@@ -7,9 +6,9 @@ import BearingCard from '@/components/bearing/BearingCard';
 import GhostIcon from '@/components/icons/GhostIcon';
 import WaveIcon from '@/components/icons/WaveIcon';
 import { Text } from '@/components/Text';
-import { db } from '@/db/client';
-import { Item, items as itemsTable } from '@/db/schema';
+import { Item } from '@/db/schema';
 import { formatCompactCurrency } from '@/lib/currency';
+import { itemRepository } from '@/lib/repositories/itemRepository';
 import { getUserSettings } from '@/lib/secureStore';
 
 export default function Bearing() {
@@ -25,42 +24,14 @@ export default function Bearing() {
 
   const loadData = useCallback(async () => {
     try {
-      const [reclaimed, ghostResult, totalPurchasedResult, historyResult, settingsResult] =
-        await Promise.all([
-          db
-            .select({ totalReclaimed: sql<number>`sum(${itemsTable.timeCost})`.mapWith(Number) })
-            .from(itemsTable)
-            .where(eq(itemsTable.status, 'rejected')),
+      const [stats, settingsResult] = await Promise.all([
+        itemRepository.getBearingStats(),
+        getUserSettings(),
+      ]);
 
-          db
-            .select({ totalGhost: sql<number>`sum(${itemsTable.timeCost})`.mapWith(Number) })
-            .from(itemsTable)
-            .where(
-              and(eq(itemsTable.status, 'purchased'), eq(itemsTable.reviewStatus, 'regretted')),
-            ),
-
-          db
-            .select({
-              totalPurchased: sql<number>`sum(${itemsTable.timeCost})`.mapWith(Number),
-            })
-            .from(itemsTable)
-            .where(eq(itemsTable.status, 'purchased')),
-          db
-            .select()
-            .from(itemsTable)
-            .where(
-              or(
-                and(eq(itemsTable.status, 'purchased'), eq(itemsTable.reviewStatus, 'regretted')),
-                eq(itemsTable.status, 'rejected'),
-              ),
-            )
-            .orderBy(desc(itemsTable.createdAt)),
-          getUserSettings(),
-        ]);
-
-      setTotalReclaimed(reclaimed[0].totalReclaimed || 0);
-      setGhostHour(ghostResult[0].totalGhost || 0);
-      setItems(historyResult);
+      setTotalReclaimed(stats.totalReclaimed);
+      setGhostHour(stats.totalGhost);
+      setItems(stats.history);
 
       const settings = settingsResult;
 
@@ -72,12 +43,12 @@ export default function Bearing() {
         daysPerMonth: settings.workDaysPerMonth || 20,
       });
 
-      const totalPurchasedHours = totalPurchasedResult[0]?.totalPurchased || 0;
+      const totalPurchasedHours = stats.totalPurchasedHours;
 
       let totalRegretRate = 0;
 
-      if (totalPurchasedHours > 0 && ghostResult[0].totalGhost > 0) {
-        totalRegretRate = (ghostResult[0].totalGhost / totalPurchasedHours) * 100;
+      if (totalPurchasedHours > 0 && stats.totalGhost > 0) {
+        totalRegretRate = (stats.totalGhost / totalPurchasedHours) * 100;
       }
 
       setRegretRate(totalRegretRate);

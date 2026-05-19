@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { desc, InferSelectModel } from 'drizzle-orm';
-import { db } from '@/db/client';
 import { items as itemsTable } from '@/db/schema';
+import { InferSelectModel } from 'drizzle-orm';
 import { getUserSettings, UserSettings } from '@/lib/secureStore';
+import { itemRepository } from '@/lib/repositories/itemRepository';
 
 type Item = InferSelectModel<typeof itemsTable>;
 
@@ -24,7 +24,7 @@ export const useItemManagement = () => {
   const loadData = useCallback(async () => {
     try {
       const [fetchedItems, settingsResult] = await Promise.all([
-        db.select().from(itemsTable).limit(5).orderBy(desc(itemsTable.createdAt)),
+        itemRepository.getRecentItems(5),
         getUserSettings(),
       ]);
 
